@@ -12,10 +12,10 @@ export const TILES = [
   { id: 'marble-white', name: 'White Marble Herringbone', kind: 'herringbone', base: '#ece7dd', grout: '#d7d0c4', tint: '#ffffff', inPerTile: 18, roughness: 0.32 },
   { id: 'marble-cream', name: 'Cream Marble Herringbone', kind: 'herringbone', base: '#ece7dd', grout: '#d8cdb8', tint: '#efe0c6', inPerTile: 18, roughness: 0.36 },
   { id: 'marble-mosaic', name: 'Marble Mosaic Herringbone', kind: 'herringbone', base: '#ece7dd', grout: '#cfc6b6', tint: '#ffffff', inPerTile: 4, roughness: 0.3, veinScale: 0.4 },
-  { id: 'zellige-cream', name: 'Cream Zellige',       kind: 'zellige', base: '#ecdfc4', grout: '#ddd2b8', grid: 6, inPerTile: 24, roughness: 0.26 },
-  { id: 'zellige-sand', name: 'Sand Zellige',         kind: 'zellige', base: '#d8c39a', grout: '#cabfa6', grid: 6, inPerTile: 24, roughness: 0.28 },
+  { id: 'zellige-cream', name: 'Cream Zellige',       kind: 'zellige', base: '#ecdfc4', grout: '#ddd2b8', grid: 6, inPerTile: 24, roughness: 0.26, floorScale: 1.8 },
+  { id: 'zellige-sand', name: 'Sand Zellige',         kind: 'zellige', base: '#d8c39a', grout: '#cabfa6', grid: 6, inPerTile: 24, roughness: 0.28, floorScale: 1.8 },
   { id: 'terrazzo',     name: 'Warm Terrazzo',        kind: 'terrazzo', base: '#ece3d0', chips: ['#e8a33d', '#227735', '#b8a67e', '#8a6f4a', '#ffffff'], inPerTile: 34, roughness: 0.4 },
-  { id: 'zellige-sage', name: 'Sage Zellige',         kind: 'zellige', base: '#aab394', grout: '#b3b39c', grid: 6, inPerTile: 24, roughness: 0.28 },
+  { id: 'zellige-sage', name: 'Sage Zellige',         kind: 'zellige', base: '#aab394', grout: '#b3b39c', grid: 6, inPerTile: 24, roughness: 0.28, floorScale: 1.8 },
 ];
 
 export const DEFAULT_TILE = 'marble-white';

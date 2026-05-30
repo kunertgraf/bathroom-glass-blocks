@@ -93,9 +93,10 @@ export function buildScene() {
     return tex;
   }
 
-  function tileMaterial(w, h, doubleSide = false, tile = activeWallTile) {
+  function tileMaterial(w, h, doubleSide = false, tile = activeWallTile, scale = 1) {
     const t = baseTexture(tile).clone();
-    t.repeat.set(Math.max(1, w / tile.inPerTile), Math.max(1, h / tile.inPerTile));
+    const per = tile.inPerTile * scale; // larger scale -> fewer repeats -> bigger tiles
+    t.repeat.set(Math.max(1, w / per), Math.max(1, h / per));
     t.needsUpdate = true;
     return new THREE.MeshStandardMaterial({
       map: t,
@@ -315,7 +316,7 @@ export function buildScene() {
     floor.position.set(0, 0, SIDE_DEPTH / 2);
     if (floor.material.map) floor.material.map.dispose();
     floor.material.dispose();
-    floor.material = tileMaterial(wallW, SIDE_DEPTH, false, activeFloorTile);
+    floor.material = tileMaterial(wallW, SIDE_DEPTH, false, activeFloorTile, activeFloorTile.floorScale ?? 1);
   }
 
   return { scene, contextGroup, setOpening, setDaylight, setWindowColors, setWallTile, setFloorTile, tiles: TILES };

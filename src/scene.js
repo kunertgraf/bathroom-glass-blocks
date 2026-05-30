@@ -44,6 +44,19 @@ export function buildScene() {
   const fill = new THREE.DirectionalLight(0xfff4e6, 0.18);
   fill.position.set(40, 120, 140);
   scene.add(fill);
+
+  // Interior lights: simulate the room's own warm-white lighting. Off in
+  // daylight, they fade in as the Backlight (daylight) nears zero, so a dim/
+  // night setting reads as "lights on inside" instead of going black. A
+  // downward warm directional gives ceiling-light shading + a soft warm ambient
+  // lifts the shadows. Driven by setDaylight().
+  const interiorAmbient = new THREE.AmbientLight(0xffe2bd, 0);
+  scene.add(interiorAmbient);
+  const interiorDown = new THREE.DirectionalLight(0xffdcb0, 0);
+  interiorDown.position.set(10, 160, 40);
+  interiorDown.target.position.set(0, 0, 30);
+  scene.add(interiorDown);
+  scene.add(interiorDown.target);
   // Daylight through the window: a grid of small area lights filling the
   // opening, each facing straight into the room. Each zone's color/intensity is
   // driven by the glass blocks in front of it (see applyZoneLighting). Sized/
@@ -129,10 +142,19 @@ export function buildScene() {
     glassColors = colors;
     applyZoneLighting();
   }
+  // Interior lighting ramps in only as daylight nears zero (off at/above the
+  // threshold, full at level 0).
+  const INTERIOR_THRESHOLD = 0.35;
+  function applyInteriorLight() {
+    const f = Math.max(0, (INTERIOR_THRESHOLD - daylightLevel) / INTERIOR_THRESHOLD);
+    interiorAmbient.intensity = 0.55 * f;
+    interiorDown.intensity = 0.8 * f;
+  }
   function setDaylight(level) {
     daylightLevel = level;
     applyZoneLighting();
     applyBackdropBrightness();
+    applyInteriorLight();
   }
 
   // --- Exterior view backdrop (the outside scene seen through the window) ---

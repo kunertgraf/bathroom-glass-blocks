@@ -1,0 +1,39 @@
+# Glass Block Bathroom Visualizer
+
+Interactive 3D editor to design and tint the colored glass block window above the
+tub in the master bathroom addition (see `assets/`). Helps decide which block
+arrangement and color layout looks best, in the context of the tub/wall.
+
+## Tech stack
+- Static site, **no build step**. Vanilla JS (ES modules), HTML, CSS.
+- **Three.js 0.160** loaded from a CDN via an ESM import map in `index.html`.
+- State persists in `localStorage` and the URL hash; PNG export via canvas.
+
+## Run
+```
+python3 -m http.server 8000   # then open http://localhost:8000
+```
+Requires internet access (Three.js loads from jsDelivr).
+
+## Layout (all units = inches)
+- `src/main.js` — renderer, camera, OrbitControls, pointer painting, wiring. Exposes `window.gbv` for debugging.
+- `src/scene.js` — bathroom context: recessed south wall opening, partial side (return) walls, tub, floor, lighting, exterior backdrop.
+- `src/blocks.js` — the glass block grid (one mesh/material per block) + mortar lattice; tinting, rebuild, save/restore colors.
+- `src/glassMaterial.js` — refractive glass material (`transmission`/`ior`/`thickness`) whose procedural wavy-ripple normal map warps the transmitted background; `normalScale`/`thickness` tune the distortion strength.
+- `src/layout.js` — shared geometry constants and grid math.
+- `src/palette.js` — preset glass colors (from the reference photos) + custom colors.
+- `src/editor.js` — control panel UI.
+- `src/state.js` — serialize/share/save/export.
+
+## Notes
+- Real glass colors (golden yellow, pale chartreuse, emerald) and the wavy block
+  texture come from `assets/PXL_*.jpg`. All blocks are 6"×6".
+- Opening is a fixed 5'×4' (10×8 blocks), per the plan (set in `main.js`; no UI
+  size controls). Blocks are recessed (centered) within a 7" wall
+  (`WALL_THICKNESS`). Each block has its own mortar frame: gray for clear,
+  orange for colored (`MORTAR_*` in `blocks.js`).
+- All walls + floor are tiled with `assets/herringbone.png` (real marble photo),
+  cloned per-surface with its own `repeat`; large tile scale + anisotropy keep
+  repeat seams soft. `scene.js` re-runs setOpening() on texture load so clones
+  pick up the image. Exterior view through the glass = `assets/backyard.jpg`,
+  part of `contextGroup` so it hides with "Show bathroom context".

@@ -1,0 +1,9 @@
+# macOS
+.DS_Store
+
+# Private / unused assets — keep these out of the public repo.
+# The app only uses assets/backyard.jpg and assets/herringbone.png.
+assets/2503_Plans*.pdf
+assets/PXL_*.jpg
+assets/wallpaper.jpg
+assets/tile.webp

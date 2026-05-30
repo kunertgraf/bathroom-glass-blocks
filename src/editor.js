@@ -2,6 +2,7 @@ import { fullPalette, saveCustomColor, clearCustomColors } from './palette.js';
 import {
   serialize, applyState, shareURL, loadSaved, saveNamed, deleteNamed, exportPNG,
 } from './state.js';
+import { PRESET_ARRANGEMENTS } from './presets.js';
 
 const $ = (id) => document.getElementById(id);
 
@@ -86,20 +87,39 @@ export function initEditor(app) {
   // --- Arrangements ---
   function refreshSavedList() {
     const sel = $('savedList');
-    const saved = loadSaved();
     sel.innerHTML = '';
+
+    // Built-in presets (shipped with the app, available to everyone).
+    const presetNames = Object.keys(PRESET_ARRANGEMENTS);
+    if (presetNames.length) {
+      const grp = document.createElement('optgroup');
+      grp.label = 'Built-in';
+      for (const name of presetNames) {
+        const opt = document.createElement('option');
+        opt.textContent = name;
+        opt.value = 'preset:' + name;
+        grp.appendChild(opt);
+      }
+      sel.appendChild(grp);
+    }
+
+    // User saves (localStorage, per-browser).
+    const saved = loadSaved();
     const names = Object.keys(saved);
-    if (!names.length) {
+    if (names.length) {
+      const grp = document.createElement('optgroup');
+      grp.label = 'Saved';
+      for (const name of names) {
+        const opt = document.createElement('option');
+        opt.textContent = name;
+        opt.value = name;
+        grp.appendChild(opt);
+      }
+      sel.appendChild(grp);
+    } else if (!presetNames.length) {
       const opt = document.createElement('option');
       opt.textContent = '(none saved)';
       opt.value = '';
-      sel.appendChild(opt);
-      return;
-    }
-    for (const name of names) {
-      const opt = document.createElement('option');
-      opt.textContent = name;
-      opt.value = name;
       sel.appendChild(opt);
     }
   }
@@ -113,20 +133,26 @@ export function initEditor(app) {
   });
 
   $('loadArr').addEventListener('click', () => {
-    const name = $('savedList').value;
-    if (!name) return;
-    const saved = loadSaved()[name];
-    if (!saved) return;
-    applyState(app, saved);
+    const value = $('savedList').value;
+    if (!value) return;
+    const state = value.startsWith('preset:')
+      ? PRESET_ARRANGEMENTS[value.slice('preset:'.length)]
+      : loadSaved()[value];
+    if (!state) return;
+    applyState(app, state);
     app.updateOpening();
     app.resetView();
     syncInputs();
   });
 
   $('deleteArr').addEventListener('click', () => {
-    const name = $('savedList').value;
-    if (!name) return;
-    deleteNamed(name);
+    const value = $('savedList').value;
+    if (!value) return;
+    if (value.startsWith('preset:')) {
+      alert('Built-in arrangements can’t be deleted.');
+      return;
+    }
+    deleteNamed(value);
     refreshSavedList();
   });
 

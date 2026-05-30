@@ -24,6 +24,7 @@ Requires internet access (Three.js loads from jsDelivr).
 - `src/palette.js` — preset glass colors (from the reference photos) + custom colors.
 - `src/editor.js` — control panel UI.
 - `src/state.js` — serialize/share/save/export.
+- `src/presets.js` — built-in arrangements shipped with the app (shown under "Built-in" in the Arrangements dropdown, available to all visitors; user saves still live in localStorage).
 
 ## Notes
 - Real glass colors (golden yellow, pale chartreuse, emerald) and the wavy block

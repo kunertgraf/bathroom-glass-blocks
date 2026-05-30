@@ -11,6 +11,7 @@ import * as THREE from 'three';
 export const TILES = [
   { id: 'marble-white', name: 'Arctic White Marble', kind: 'image', src: 'assets/herringbone.png', tint: '#ffffff', inPerTile: 50, roughness: 0.5 },
   { id: 'marble-cream', name: 'Cream Marble',         kind: 'image', src: 'assets/herringbone.png', tint: '#f0e4cf', inPerTile: 50, roughness: 0.5 },
+  { id: 'zellige-cream', name: 'Cream Zellige',       kind: 'zellige', base: '#ecdfc4', grout: '#ddd2b8', grid: 6, inPerTile: 24, roughness: 0.26 },
   { id: 'zellige-sand', name: 'Sand Zellige',         kind: 'zellige', base: '#d8c39a', grout: '#cabfa6', grid: 6, inPerTile: 24, roughness: 0.28 },
   { id: 'terrazzo',     name: 'Warm Terrazzo',        kind: 'terrazzo', base: '#ece3d0', chips: ['#e8a33d', '#227735', '#b8a67e', '#8a6f4a', '#ffffff'], inPerTile: 34, roughness: 0.4 },
   { id: 'zellige-sage', name: 'Sage Zellige',         kind: 'zellige', base: '#aab394', grout: '#b3b39c', grid: 6, inPerTile: 24, roughness: 0.28 },

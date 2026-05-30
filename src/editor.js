@@ -73,9 +73,8 @@ export function initEditor(app) {
     }
   });
 
-  // --- Tile ---
-  function renderTileOptions() {
-    const sel = $('tileSelect');
+  // --- Tile (walls + floor independently) ---
+  function fillTileSelect(sel, value) {
     sel.innerHTML = '';
     for (const t of app.tiles) {
       const opt = document.createElement('option');
@@ -83,9 +82,14 @@ export function initEditor(app) {
       opt.textContent = t.name;
       sel.appendChild(opt);
     }
-    sel.value = app.tile;
+    sel.value = value;
   }
-  $('tileSelect').addEventListener('change', (e) => app.setTile(e.target.value));
+  function renderTileOptions() {
+    fillTileSelect($('wallTile'), app.wallTile);
+    fillTileSelect($('floorTile'), app.floorTile);
+  }
+  $('wallTile').addEventListener('change', (e) => app.setWallTile(e.target.value));
+  $('floorTile').addEventListener('change', (e) => app.setFloorTile(e.target.value));
 
   // --- Lighting ---
   $('backlight').addEventListener('input', (e) => {
@@ -192,7 +196,8 @@ export function initEditor(app) {
   // Reflect current state back into the controls (after a load).
   function syncInputs() {
     $('backlight').value = app.grid.backlight;
-    $('tileSelect').value = app.tile;
+    $('wallTile').value = app.wallTile;
+    $('floorTile').value = app.floorTile;
   }
 
   function flash(btn, msg) {

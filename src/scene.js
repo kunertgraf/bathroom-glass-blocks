@@ -77,7 +77,8 @@ export function buildScene() {
   // anisotropy keep repeat seams soft.
   const loader = new THREE.TextureLoader();
   const tileTexCache = {};            // tile id -> base THREE.Texture
-  let activeTile = getTile(DEFAULT_TILE);
+  let activeWallTile = getTile(DEFAULT_TILE);
+  let activeFloorTile = getTile(DEFAULT_TILE);
 
   function baseTexture(tile) {
     if (tileTexCache[tile.id]) return tileTexCache[tile.id];
@@ -92,8 +93,7 @@ export function buildScene() {
     return tex;
   }
 
-  function tileMaterial(w, h, doubleSide = false) {
-    const tile = activeTile;
+  function tileMaterial(w, h, doubleSide = false, tile = activeWallTile) {
     const t = baseTexture(tile).clone();
     t.repeat.set(Math.max(1, w / tile.inPerTile), Math.max(1, h / tile.inPerTile));
     t.needsUpdate = true;
@@ -106,9 +106,13 @@ export function buildScene() {
     });
   }
 
-  // Switch the active tile and rebuild the tiled surfaces.
-  function setTile(id) {
-    activeTile = getTile(id);
+  // Switch the wall or floor tile and rebuild the affected surfaces.
+  function setWallTile(id) {
+    activeWallTile = getTile(id);
+    if (lastArgs) setOpening(...lastArgs);
+  }
+  function setFloorTile(id) {
+    activeFloorTile = getTile(id);
     if (lastArgs) setOpening(...lastArgs);
   }
 
@@ -311,10 +315,10 @@ export function buildScene() {
     floor.position.set(0, 0, SIDE_DEPTH / 2);
     if (floor.material.map) floor.material.map.dispose();
     floor.material.dispose();
-    floor.material = tileMaterial(wallW, SIDE_DEPTH);
+    floor.material = tileMaterial(wallW, SIDE_DEPTH, false, activeFloorTile);
   }
 
-  return { scene, contextGroup, setOpening, setDaylight, setWindowColors, setTile, tiles: TILES };
+  return { scene, contextGroup, setOpening, setDaylight, setWindowColors, setWallTile, setFloorTile, tiles: TILES };
 }
 
 export { SILL_HEIGHT };

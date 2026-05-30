@@ -10,7 +10,8 @@ export function serialize(app) {
     rows: app.grid.rows,
     blockSize: app.grid.blockSize,
     backlight: app.grid.backlight,
-    tile: app.tile,
+    wallTile: app.wallTile,
+    floorTile: app.floorTile,
     colors: app.grid.getColors(),
   };
 }
@@ -18,7 +19,9 @@ export function serialize(app) {
 export function applyState(app, s) {
   if (!s || !s.colors) return;
   app.setBacklight(typeof s.backlight === 'number' ? s.backlight : 0.9);
-  if (s.tile) app.setTile(s.tile);
+  // `tile` is the legacy single-surface key; fall back to it for both.
+  if (s.wallTile || s.tile) app.setWallTile(s.wallTile || s.tile);
+  if (s.floorTile || s.tile) app.setFloorTile(s.floorTile || s.tile);
   if (s.blockSize) app.grid.rebuild(s.cols, s.rows, s.blockSize, false);
   app.grid.setColors(s.colors);
 }

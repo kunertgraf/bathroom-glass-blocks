@@ -11,6 +11,7 @@ import * as THREE from 'three';
 export const TILES = [
   { id: 'marble-white', name: 'White Marble Herringbone', kind: 'herringbone', base: '#ece7dd', grout: '#d7d0c4', tint: '#ffffff', inPerTile: 18, roughness: 0.32 },
   { id: 'marble-cream', name: 'Cream Marble Herringbone', kind: 'herringbone', base: '#ece7dd', grout: '#d8cdb8', tint: '#efe0c6', inPerTile: 18, roughness: 0.36 },
+  { id: 'marble-mosaic', name: 'Marble Mosaic Herringbone', kind: 'herringbone', base: '#ece7dd', grout: '#cfc6b6', tint: '#ffffff', inPerTile: 4, roughness: 0.3, veinScale: 0.4 },
   { id: 'zellige-cream', name: 'Cream Zellige',       kind: 'zellige', base: '#ecdfc4', grout: '#ddd2b8', grid: 6, inPerTile: 24, roughness: 0.26 },
   { id: 'zellige-sand', name: 'Sand Zellige',         kind: 'zellige', base: '#d8c39a', grout: '#cabfa6', grid: 6, inPerTile: 24, roughness: 0.28 },
   { id: 'terrazzo',     name: 'Warm Terrazzo',        kind: 'terrazzo', base: '#ece3d0', chips: ['#e8a33d', '#227735', '#b8a67e', '#8a6f4a', '#ffffff'], inPerTile: 34, roughness: 0.4 },
@@ -110,6 +111,7 @@ function makeHerringboneCanvas(tile) {
   ctx.fillStyle = tile.grout || '#d7d0c4';
   ctx.fillRect(0, 0, S, S);
   const [br, bg, bb] = hexToRgb(tile.base);
+  const veinScale = tile.veinScale ?? 1; // < 1 = fewer/fainter veins (small mosaic)
 
   function brick(x, y, w, h, orient) {
     const ix = Math.round(x / u) & 3, iy = Math.round(y / u) & 3; // mod 4 -> periodic
@@ -122,12 +124,12 @@ function makeHerringboneCanvas(tile) {
     ctx.beginPath();
     ctx.rect(rx, ry, rw, rh);
     ctx.clip();
-    const veins = 1 + Math.floor(hash01(ix, iy, orient + 9) * 2);
+    const veins = Math.round((1 + Math.floor(hash01(ix, iy, orient + 9) * 2)) * veinScale);
     for (let k = 0; k < veins; k++) {
       const h1 = hash01(ix, iy, orient + k * 5 + 1);
       const h2 = hash01(ix, iy, orient + k * 5 + 2);
       const h3 = hash01(ix, iy, orient + k * 5 + 3);
-      ctx.strokeStyle = `rgba(120,116,110,${0.10 + h3 * 0.10})`;
+      ctx.strokeStyle = `rgba(120,116,110,${(0.10 + h3 * 0.10) * veinScale})`;
       ctx.lineWidth = 1 + h2 * 1.5;
       ctx.beginPath();
       ctx.moveTo(rx + h1 * rw, ry);

@@ -73,6 +73,20 @@ export function initEditor(app) {
     }
   });
 
+  // --- Tile ---
+  function renderTileOptions() {
+    const sel = $('tileSelect');
+    sel.innerHTML = '';
+    for (const t of app.tiles) {
+      const opt = document.createElement('option');
+      opt.value = t.id;
+      opt.textContent = t.name;
+      sel.appendChild(opt);
+    }
+    sel.value = app.tile;
+  }
+  $('tileSelect').addEventListener('change', (e) => app.setTile(e.target.value));
+
   // --- Lighting ---
   $('backlight').addEventListener('input', (e) => {
     app.setBacklight(parseFloat(e.target.value));
@@ -178,6 +192,7 @@ export function initEditor(app) {
   // Reflect current state back into the controls (after a load).
   function syncInputs() {
     $('backlight').value = app.grid.backlight;
+    $('tileSelect').value = app.tile;
   }
 
   function flash(btn, msg) {
@@ -189,6 +204,7 @@ export function initEditor(app) {
   // initial render
   renderSwatches();
   setActive(fullPalette()[1] || fullPalette()[0]); // default to first tint
+  renderTileOptions();
   refreshSavedList();
   syncInputs();
 }

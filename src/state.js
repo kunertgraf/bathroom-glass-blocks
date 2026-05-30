@@ -10,6 +10,7 @@ export function serialize(app) {
     rows: app.grid.rows,
     blockSize: app.grid.blockSize,
     backlight: app.grid.backlight,
+    tile: app.tile,
     colors: app.grid.getColors(),
   };
 }
@@ -17,6 +18,7 @@ export function serialize(app) {
 export function applyState(app, s) {
   if (!s || !s.colors) return;
   app.setBacklight(typeof s.backlight === 'number' ? s.backlight : 0.9);
+  if (s.tile) app.setTile(s.tile);
   if (s.blockSize) app.grid.rebuild(s.cols, s.rows, s.blockSize, false);
   app.grid.setColors(s.colors);
 }

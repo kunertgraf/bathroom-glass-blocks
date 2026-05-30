@@ -11,7 +11,7 @@ const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, preserveDraw
 renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
 renderer.outputColorSpace = THREE.SRGBColorSpace;
 
-const { scene, contextGroup, setOpening, setDaylight, setWindowColors } = buildScene();
+const { scene, contextGroup, setOpening, setDaylight, setWindowColors, setTile, tiles } = buildScene();
 
 const grid = createBlockGrid();
 scene.add(grid.group);
@@ -25,8 +25,11 @@ controls.dampingFactor = 0.08;
 const app = {
   scene, camera, renderer, controls, grid,
   activeColor: '#e8a33d',
+  tiles,
+  tile: 'marble-white',
   // Backlight slider drives both the glass glow and the window daylight.
   setBacklight(v) { grid.setBacklight(v); setDaylight(v); },
+  setTile(id) { this.tile = id; setTile(id); },
   setContextVisible(v) { contextGroup.visible = v; },
   updateOpening() {
     const { width, height } = gridSize(grid.cols, grid.rows, grid.blockSize);

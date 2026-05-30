@@ -1,13 +1,12 @@
 import * as THREE from 'three';
 import { RectAreaLightUniformsLib } from 'three/addons/lights/RectAreaLightUniformsLib.js';
 import { TUB, SILL_HEIGHT, WALL_THICKNESS } from './layout.js';
+import { TILES, DEFAULT_TILE, getTile, makeProceduralTexture } from './tiles.js';
 
 const CEILING_BASE = 92;           // 7'-8" — the low (window-wall) ceiling height per the plan's elevations
 const SIDE_BORDER = 6;             // marble wall to each side of the window (≈ plan's 6' alcove around a 5' window)
 const SIDE_DEPTH = 60;             // how far the partial side walls return into the room
 const BACKDROP_ASPECT = 165 / 220; // backyard.jpg width/height
-const MARBLE_IN_PER_TILE = 50;     // herringbone.png maps to ~50" of surface (few repeats -> few seams)
-
 // The window daylight is split into a grid of small area lights tiling the
 // opening, so each patch can take on the color of the glass blocks in front of
 // it (green cluster -> green light on that side, etc.). 3 across x 2 high reads
@@ -70,26 +69,47 @@ export function buildScene() {
     }
   }
 
-  // --- Textured material (real herringbone marble photo from assets/) ---
-  // Loaded once; clones (one per surface, for independent tiling) pick up the
-  // image when it arrives via the re-run of setOpening in onTexLoad().
-  // Large tile scale (few repeats) + anisotropic filtering keeps repeat seams
-  // rare and soft. (Mirrored wrapping was avoided: it turns the directional
-  // herringbone into obvious reflected diamonds.)
+  // --- Tiled surfaces (walls + floor) ---
+  // The active tile's base texture is created once and cached, then cloned per
+  // surface for independent tiling. Image tiles (the real marble photo) load
+  // async and re-run setOpening via onTexLoad so the clones pick up the image;
+  // the others are generated procedurally (see tiles.js). Large tile scale +
+  // anisotropy keep repeat seams soft.
   const loader = new THREE.TextureLoader();
-  const marbleTex = loader.load('assets/herringbone.png', onTexLoad);
-  marbleTex.wrapS = marbleTex.wrapT = THREE.RepeatWrapping;
-  marbleTex.colorSpace = THREE.SRGBColorSpace;
-  marbleTex.anisotropy = 8;
+  const tileTexCache = {};            // tile id -> base THREE.Texture
+  let activeTile = getTile(DEFAULT_TILE);
+
+  function baseTexture(tile) {
+    if (tileTexCache[tile.id]) return tileTexCache[tile.id];
+    const tex = tile.kind === 'image'
+      ? loader.load(tile.src, onTexLoad)
+      : makeProceduralTexture(tile);
+    tex.wrapS = tex.wrapT = THREE.RepeatWrapping;
+    tex.colorSpace = THREE.SRGBColorSpace;
+    tex.anisotropy = 8;
+    tex.needsUpdate = true;
+    tileTexCache[tile.id] = tex;
+    return tex;
+  }
 
   function tileMaterial(w, h, doubleSide = false) {
-    const t = marbleTex.clone();
-    t.repeat.set(Math.max(1, w / MARBLE_IN_PER_TILE), Math.max(1, h / MARBLE_IN_PER_TILE));
+    const tile = activeTile;
+    const t = baseTexture(tile).clone();
+    t.repeat.set(Math.max(1, w / tile.inPerTile), Math.max(1, h / tile.inPerTile));
     t.needsUpdate = true;
     return new THREE.MeshStandardMaterial({
-      map: t, roughness: 0.5, metalness: 0,
+      map: t,
+      color: new THREE.Color(tile.tint || '#ffffff'),
+      roughness: tile.roughness ?? 0.5,
+      metalness: 0,
       side: doubleSide ? THREE.DoubleSide : THREE.FrontSide,
     });
+  }
+
+  // Switch the active tile and rebuild the tiled surfaces.
+  function setTile(id) {
+    activeTile = getTile(id);
+    if (lastArgs) setOpening(...lastArgs);
   }
 
   // Re-run the last wall build once a texture image finishes loading, so the
@@ -284,18 +304,17 @@ export function buildScene() {
       z.light.lookAt(zx, zy, SIDE_DEPTH);
     }
 
-    // fit the floor to the room footprint (wall width x side-wall depth)
+    // fit the floor to the room footprint (wall width x side-wall depth) and
+    // rebuild its material so a tile change applies to the floor too
     floor.geometry.dispose();
     floor.geometry = new THREE.PlaneGeometry(wallW, SIDE_DEPTH);
     floor.position.set(0, 0, SIDE_DEPTH / 2);
-    floor.material.map.repeat.set(
-      Math.max(1, wallW / MARBLE_IN_PER_TILE),
-      Math.max(1, SIDE_DEPTH / MARBLE_IN_PER_TILE)
-    );
-    floor.material.map.needsUpdate = true;
+    if (floor.material.map) floor.material.map.dispose();
+    floor.material.dispose();
+    floor.material = tileMaterial(wallW, SIDE_DEPTH);
   }
 
-  return { scene, contextGroup, setOpening, setDaylight, setWindowColors };
+  return { scene, contextGroup, setOpening, setDaylight, setWindowColors, setTile, tiles: TILES };
 }
 
 export { SILL_HEIGHT };

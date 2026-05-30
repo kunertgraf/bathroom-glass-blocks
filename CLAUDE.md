@@ -17,7 +17,7 @@ Requires internet access (Three.js loads from jsDelivr).
 
 ## Layout (all units = inches)
 - `src/main.js` — renderer, camera, OrbitControls, pointer painting, wiring. Exposes `window.gbv` for debugging.
-- `src/scene.js` — bathroom context: recessed south wall opening, partial side (return) walls, tub, floor, lighting, exterior backdrop.
+- `src/scene.js` — bathroom context: recessed south wall opening, partial side (return) walls, tub, floor, lighting, exterior backdrop. The window daylight is a grid of `RectAreaLight`s (`ZONES_X`×`ZONES_Y`) tiling the opening; `setWindowColors()` tints each zone by the average color of the glass blocks in front of it (dimmer for saturated tints), so the room light takes on the glass colors. `main.js` pushes block colors in each frame when the layout changes.
 - `src/blocks.js` — the glass block grid (one mesh/material per block) + mortar lattice; tinting, rebuild, save/restore colors.
 - `src/glassMaterial.js` — refractive glass material (`transmission`/`ior`/`thickness`) whose procedural wavy-ripple normal map warps the transmitted background; `normalScale`/`thickness` tune the distortion strength.
 - `src/layout.js` — shared geometry constants and grid math.

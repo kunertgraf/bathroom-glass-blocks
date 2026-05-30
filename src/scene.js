@@ -8,6 +8,23 @@ const SIDE_DEPTH = 60;             // how far the partial side walls return into
 const BACKDROP_ASPECT = 165 / 220; // backyard.jpg width/height
 const MARBLE_IN_PER_TILE = 50;     // herringbone.png maps to ~50" of surface (few repeats -> few seams)
 
+// The window daylight is split into a grid of small area lights tiling the
+// opening, so each patch can take on the color of the glass blocks in front of
+// it (green cluster -> green light on that side, etc.). 3 across x 2 high reads
+// the horizontal/vertical color spread without being costly.
+const ZONES_X = 3;
+const ZONES_Y = 2;
+const ZONE_BASE = 4.0;                       // per-zone area-light intensity at daylight=1, clear glass
+const CLEAR_RGB = [1, 0.957, 0.886];         // warm daylight cast through clear glass (~#fff4e2)
+
+function hexToRgb(hex) {
+  const n = parseInt(hex.slice(1), 16);
+  return [((n >> 16) & 255) / 255, ((n >> 8) & 255) / 255, (n & 255) / 255];
+}
+// How much light the glass passes (its perceived luminance) — saturated greens
+// pass less than pale sand/amber, so colored light also reads dimmer.
+function luma(r, g, b) { return 0.2126 * r + 0.7152 * g + 0.0722 * b; }
+
 // Builds the bathroom context (south wall with a recessed opening, partial side
 // walls, tub, floor) plus lighting and the exterior backdrop. The wall is
 // rebuilt to match the grid via setOpening(). Context geometry lives in
@@ -22,16 +39,23 @@ export function buildScene() {
   // --- Lighting ---
   // Low flat fill, so the window light below creates real gradients/contrast.
   RectAreaLightUniformsLib.init();
-  scene.add(new THREE.AmbientLight(0xffffff, 0.32));
-  scene.add(new THREE.HemisphereLight(0xe8eeff, 0x2a1f18, 0.3));
+  scene.add(new THREE.AmbientLight(0xffffff, 0.24));
+  scene.add(new THREE.HemisphereLight(0xe8eeff, 0x2a1f18, 0.24));
   const fill = new THREE.DirectionalLight(0xfff4e6, 0.18);
   fill.position.set(40, 120, 140);
   scene.add(fill);
-  // Daylight through the window: a soft area light filling the opening and
-  // facing straight into the room (so the whole window casts, not just the
-  // bottom). Sized/positioned to the opening in setOpening().
-  const windowLight = new THREE.RectAreaLight(0xfff4e2, 3, 60, 48);
-  scene.add(windowLight);
+  // Daylight through the window: a grid of small area lights filling the
+  // opening, each facing straight into the room. Each zone's color/intensity is
+  // driven by the glass blocks in front of it (see applyZoneLighting). Sized/
+  // positioned to the opening in setOpening().
+  const windowZones = [];
+  for (let j = 0; j < ZONES_Y; j++) {
+    for (let i = 0; i < ZONES_X; i++) {
+      const light = new THREE.RectAreaLight(0xfff4e2, ZONE_BASE, 10, 10);
+      scene.add(light);
+      windowZones.push({ light, i, j });
+    }
+  }
 
   // --- Textured material (real herringbone marble photo from assets/) ---
   // Loaded once; clones (one per surface, for independent tiling) pick up the
@@ -64,13 +88,50 @@ export function buildScene() {
   // window light AND the brightness of the exterior backdrop, so the glass —
   // which is lit by transmitting that backdrop — visibly brightens/dims with it.
   let daylightLevel = 0.9;
+  let glassColors = null; // latest colors[row][col] (row 0 = bottom), or null = all clear
   function applyBackdropBrightness() {
     const g = Math.min(1, 0.12 + daylightLevel * 0.78); // dusk (dim) -> full daylight
     if (backdropMat.map) backdropMat.color.setScalar(g);
   }
+
+  // Tint each window zone by the average color of the glass blocks in front of
+  // it: hue from the mean block color (clear = warm daylight), brightness scaled
+  // by how much light that glass passes. This is what colors the room light.
+  function applyZoneLighting() {
+    const colors = glassColors;
+    const rows = colors ? colors.length : 0;
+    for (const z of windowZones) {
+      let rs = 0, gs = 0, bs = 0, ts = 0, n = 0;
+      for (let r = 0; r < rows; r++) {
+        const cols = colors[r].length;
+        const zj = Math.min(ZONES_Y - 1, Math.floor((r / rows) * ZONES_Y));
+        if (zj !== z.j) continue;
+        for (let c = 0; c < cols; c++) {
+          const zi = Math.min(ZONES_X - 1, Math.floor((c / cols) * ZONES_X));
+          if (zi !== z.i) continue;
+          const hex = colors[r][c];
+          const [rr, gg, bb] = hex ? hexToRgb(hex) : CLEAR_RGB;
+          rs += rr; gs += gg; bs += bb; ts += luma(rr, gg, bb);
+          n++;
+        }
+      }
+      if (!n) { rs = CLEAR_RGB[0]; gs = CLEAR_RGB[1]; bs = CLEAR_RGB[2]; ts = luma(...CLEAR_RGB); n = 1; }
+      const r = rs / n, g = gs / n, b = bs / n, t = ts / n;
+      const mx = Math.max(r, g, b, 1e-4); // normalize hue to full; dimming carried by intensity
+      z.light.color.setRGB(r / mx, g / mx, b / mx);
+      // Lift the transmittance off zero so saturated tints (esp. green, which
+      // passes least light) still cast a visible colored glow, not near-black.
+      z.light.intensity = ZONE_BASE * daylightLevel * (0.4 + 0.6 * t);
+    }
+  }
+
+  function setWindowColors(colors) {
+    glassColors = colors;
+    applyZoneLighting();
+  }
   function setDaylight(level) {
     daylightLevel = level;
-    windowLight.intensity = 3 * level;
+    applyZoneLighting();
     applyBackdropBrightness();
   }
 
@@ -167,12 +228,17 @@ export function buildScene() {
     backdrop.geometry = new THREE.PlaneGeometry(pw, ph);
     backdrop.position.set(0, cy, -12); // just behind the wall, to minimize the perspective gap
 
-    // window daylight: area light filling the opening, facing straight into the
-    // room at window height so the whole window casts (not just the bottom)
-    windowLight.width = openW;
-    windowLight.height = openH;
-    windowLight.position.set(0, cy, WALL_THICKNESS / 2 + 1);
-    windowLight.lookAt(0, cy, SIDE_DEPTH);
+    // window daylight: tile the opening with the zone lights, each facing
+    // straight into the room so the whole window casts (not just the bottom)
+    const zw = openW / ZONES_X, zh = openH / ZONES_Y;
+    for (const z of windowZones) {
+      const zx = -openW / 2 + (z.i + 0.5) * zw;
+      const zy = (cy - openH / 2) + (z.j + 0.5) * zh;
+      z.light.width = zw;
+      z.light.height = zh;
+      z.light.position.set(zx, zy, WALL_THICKNESS / 2 + 1);
+      z.light.lookAt(zx, zy, SIDE_DEPTH);
+    }
 
     // fit the floor to the room footprint (wall width x side-wall depth)
     floor.geometry.dispose();
@@ -185,7 +251,7 @@ export function buildScene() {
     floor.material.map.needsUpdate = true;
   }
 
-  return { scene, contextGroup, setOpening, setDaylight };
+  return { scene, contextGroup, setOpening, setDaylight, setWindowColors };
 }
 
 export { SILL_HEIGHT };

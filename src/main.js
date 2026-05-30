@@ -11,7 +11,7 @@ const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, preserveDraw
 renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
 renderer.outputColorSpace = THREE.SRGBColorSpace;
 
-const { scene, contextGroup, setOpening, setDaylight } = buildScene();
+const { scene, contextGroup, setOpening, setDaylight, setWindowColors } = buildScene();
 
 const grid = createBlockGrid();
 scene.add(grid.group);
@@ -133,10 +133,23 @@ function resize() {
 }
 window.addEventListener('resize', resize);
 
+// Push the current block colors into the window lighting so the daylight takes
+// on the glass tints. Only recompute when the layout actually changed.
+let lastColorKey = '';
+function syncWindowLight() {
+  const colors = grid.getColors();
+  const key = JSON.stringify(colors);
+  if (key !== lastColorKey) {
+    lastColorKey = key;
+    setWindowColors(colors);
+  }
+}
+
 function animate() {
   requestAnimationFrame(animate);
   resize();
   controls.update();
+  syncWindowLight();
   renderer.render(scene, camera);
 }
 resize();

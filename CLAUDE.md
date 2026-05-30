@@ -22,7 +22,7 @@ Requires internet access (Three.js loads from jsDelivr).
 - `src/glassMaterial.js` — refractive glass material (`transmission`/`ior`/`thickness`) whose procedural wavy-ripple normal map warps the transmitted background; `normalScale`/`thickness` tune the distortion strength.
 - `src/layout.js` — shared geometry constants and grid math.
 - `src/palette.js` — preset glass colors (from the reference photos) + custom colors.
-- `src/tiles.js` — room surface tile options for the Tile selectors (walls + floor chosen independently): the real marble photo (white + a cream tint) plus procedurally generated (canvas) zellige and terrazzo textures. `scene.js` caches the base texture per tile and clones it per surface; `setWallTile()`/`setFloorTile()` rebuild the affected surfaces.
+- `src/tiles.js` — room surface tile options for the Tile selectors (walls + floor chosen independently). All procedurally generated as seamless canvas textures: marble herringbone (white + cream), zellige (cream/sand/sage), and a warm terrazzo. The herringbone uses the 2:1 lattice whose axis-aligned period is exactly 4u×4u with position-keyed veining, so it tiles seamlessly. `scene.js` caches the base texture per tile and clones it per surface; `setWallTile()`/`setFloorTile()` rebuild the affected surfaces.
 - `src/editor.js` — control panel UI.
 - `src/state.js` — serialize/share/save/export.
 - `src/presets.js` — built-in arrangements shipped with the app (shown under "Built-in" in the Arrangements dropdown, available to all visitors; user saves still live in localStorage).
@@ -39,9 +39,9 @@ Requires internet access (Three.js loads from jsDelivr).
   not modeled). The backyard backdrop is sized within the ceiling and
   center-cropped (texture offset/repeat) so it fills the opening without
   distorting and tucks behind the lintel.
-- Walls + floor share a selectable tile (see `tiles.js` / the Tile selector),
-  default `assets/herringbone.png` (real marble photo). Each surface clones the
-  active tile's base texture with its own `repeat`; large tile scale + anisotropy
-  keep repeat seams soft. `scene.js` re-runs setOpening() on image-texture load
-  so clones pick up the image, and on `setWallTile()`/`setFloorTile()` to swap surfaces. Exterior view through the glass = `assets/backyard.jpg`,
+- Walls + floor each take a selectable tile (see `tiles.js` / the Tile selectors),
+  default white marble herringbone. Tiles are procedural seamless textures; each
+  surface clones the active tile's base texture with its own `repeat` (+ anisotropy).
+  `scene.js` re-runs setOpening() on image-texture load (if any) and on
+  `setWallTile()`/`setFloorTile()` to swap surfaces. Exterior view through the glass = `assets/backyard.jpg`,
   part of `contextGroup` so it hides with "Show bathroom context".

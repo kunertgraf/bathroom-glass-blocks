@@ -1,16 +1,16 @@
-// Tile options for the room surfaces (walls + floor). The white marble is the
-// real herringbone photo (assets/herringbone.png); the others are generated
-// procedurally as canvas textures (no extra image assets needed) so the palette
-// can offer warm/earthy options that complement the colored glass + warm light.
+// Tile options for the room surfaces (walls + floor). All are generated
+// procedurally as canvas textures (no image assets needed), so each tiles
+// seamlessly and the palette can offer warm/earthy options that complement the
+// colored glass + warm light.
 import * as THREE from 'three';
 
 // id, name: shown in the selector.
-// kind: 'image' (loads src) | 'zellige' | 'terrazzo'.
+// kind: 'herringbone' | 'zellige' | 'terrazzo' ('image' still supported via src).
 // tint: multiplied over the map (image tiles). inPerTile: inches one texture
 // repeat spans. roughness: lower = glossier (reflects the colored light more).
 export const TILES = [
-  { id: 'marble-white', name: 'Arctic White Marble', kind: 'image', src: 'assets/herringbone.png', tint: '#ffffff', inPerTile: 50, roughness: 0.5 },
-  { id: 'marble-cream', name: 'Cream Marble',         kind: 'image', src: 'assets/herringbone.png', tint: '#f0e4cf', inPerTile: 50, roughness: 0.5 },
+  { id: 'marble-white', name: 'White Marble Herringbone', kind: 'herringbone', base: '#ece7dd', grout: '#d7d0c4', tint: '#ffffff', inPerTile: 18, roughness: 0.32 },
+  { id: 'marble-cream', name: 'Cream Marble Herringbone', kind: 'herringbone', base: '#ece7dd', grout: '#d8cdb8', tint: '#efe0c6', inPerTile: 18, roughness: 0.36 },
   { id: 'zellige-cream', name: 'Cream Zellige',       kind: 'zellige', base: '#ecdfc4', grout: '#ddd2b8', grid: 6, inPerTile: 24, roughness: 0.26 },
   { id: 'zellige-sand', name: 'Sand Zellige',         kind: 'zellige', base: '#d8c39a', grout: '#cabfa6', grid: 6, inPerTile: 24, roughness: 0.28 },
   { id: 'terrazzo',     name: 'Warm Terrazzo',        kind: 'terrazzo', base: '#ece3d0', chips: ['#e8a33d', '#227735', '#b8a67e', '#8a6f4a', '#ffffff'], inPerTile: 34, roughness: 0.4 },
@@ -90,9 +90,70 @@ function makeTerrazzoCanvas(tile) {
   return cv;
 }
 
+// Deterministic [0,1) hash so a brick and its copy one period away get identical
+// shading/veining — that's what makes the herringbone tile seamlessly.
+function hash01(a, b, c) {
+  const s = Math.sin(a * 127.1 + b * 311.7 + c * 74.7) * 43758.5453;
+  return s - Math.floor(s);
+}
+
+// Seamless marble herringbone. 2:1 bricks on the lattice t1=(2u,2u), t2=(-u,u),
+// whose axis-aligned period is exactly 4u x 4u — so a 4u canvas is one tile.
+// Each brick gets position-keyed (mod 4) value variation + faint veins.
+function makeHerringboneCanvas(tile) {
+  const u = 128;                 // pixels per brick short side
+  const S = 4 * u;               // one full period
+  const gap = 5;                 // thin grout joint
+  const cv = document.createElement('canvas');
+  cv.width = cv.height = S;
+  const ctx = cv.getContext('2d');
+  ctx.fillStyle = tile.grout || '#d7d0c4';
+  ctx.fillRect(0, 0, S, S);
+  const [br, bg, bb] = hexToRgb(tile.base);
+
+  function brick(x, y, w, h, orient) {
+    const ix = Math.round(x / u) & 3, iy = Math.round(y / u) & 3; // mod 4 -> periodic
+    const v = 0.93 + hash01(ix, iy, orient) * 0.12;
+    ctx.fillStyle = `rgb(${clamp255(br * v)},${clamp255(bg * v)},${clamp255(bb * v)})`;
+    const rx = x + gap / 2, ry = y + gap / 2, rw = w - gap, rh = h - gap;
+    ctx.fillRect(rx, ry, rw, rh);
+    // faint marble veins, clipped to the brick (seeded -> identical each period)
+    ctx.save();
+    ctx.beginPath();
+    ctx.rect(rx, ry, rw, rh);
+    ctx.clip();
+    const veins = 1 + Math.floor(hash01(ix, iy, orient + 9) * 2);
+    for (let k = 0; k < veins; k++) {
+      const h1 = hash01(ix, iy, orient + k * 5 + 1);
+      const h2 = hash01(ix, iy, orient + k * 5 + 2);
+      const h3 = hash01(ix, iy, orient + k * 5 + 3);
+      ctx.strokeStyle = `rgba(120,116,110,${0.10 + h3 * 0.10})`;
+      ctx.lineWidth = 1 + h2 * 1.5;
+      ctx.beginPath();
+      ctx.moveTo(rx + h1 * rw, ry);
+      ctx.bezierCurveTo(rx + h2 * rw, ry + rh * 0.35, rx + h3 * rw, ry + rh * 0.7, rx + ((h1 + h2) % 1) * rw, ry + rh);
+      ctx.stroke();
+    }
+    ctx.restore();
+  }
+
+  for (let m = -4; m <= 7; m++) {
+    for (let n = -9; n <= 9; n++) {
+      const ox = 2 * u * m - u * n;
+      const oy = 2 * u * m + u * n;
+      brick(ox, oy, 2 * u, u, 0);       // horizontal
+      brick(ox + 2 * u, oy, u, 2 * u, 1); // vertical at its right end
+    }
+  }
+  return cv;
+}
+
 // Returns a THREE.Texture for a procedural tile (image tiles are handled in
 // scene.js via TextureLoader). Wrapping/anisotropy/colorspace set by caller.
 export function makeProceduralTexture(tile) {
-  const cv = tile.kind === 'terrazzo' ? makeTerrazzoCanvas(tile) : makeZelligeCanvas(tile);
+  let cv;
+  if (tile.kind === 'terrazzo') cv = makeTerrazzoCanvas(tile);
+  else if (tile.kind === 'herringbone') cv = makeHerringboneCanvas(tile);
+  else cv = makeZelligeCanvas(tile);
   return new THREE.CanvasTexture(cv);
 }

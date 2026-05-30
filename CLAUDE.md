@@ -33,6 +33,11 @@ Requires internet access (Three.js loads from jsDelivr).
   size controls). Blocks are recessed (centered) within a 7" wall
   (`WALL_THICKNESS`). Each block has its own mortar frame: gray for clear,
   orange for colored (`MORTAR_*` in `blocks.js`).
+- Ceiling height is 7'-8" (`CEILING_BASE = 92`), the low/window-wall height from
+  the plan's elevations (the addition's ceiling slopes up to 11'-1" at the peak,
+  not modeled). The backyard backdrop is sized within the ceiling and
+  center-cropped (texture offset/repeat) so it fills the opening without
+  distorting and tucks behind the lintel.
 - All walls + floor are tiled with `assets/herringbone.png` (real marble photo),
   cloned per-surface with its own `repeat`; large tile scale + anisotropy keep
   repeat seams soft. `scene.js` re-runs setOpening() on texture load so clones

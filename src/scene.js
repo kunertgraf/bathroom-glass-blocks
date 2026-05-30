@@ -2,7 +2,7 @@ import * as THREE from 'three';
 import { RectAreaLightUniformsLib } from 'three/addons/lights/RectAreaLightUniformsLib.js';
 import { TUB, SILL_HEIGHT, WALL_THICKNESS } from './layout.js';
 
-const CEILING_BASE = 96;           // ~8' ceiling; raised dynamically if needed to hide the backdrop
+const CEILING_BASE = 92;           // 7'-8" — the low (window-wall) ceiling height per the plan's elevations
 const SIDE_BORDER = 6;             // marble wall to each side of the window (≈ plan's 6' alcove around a 5' window)
 const SIDE_DEPTH = 60;             // how far the partial side walls return into the room
 const BACKDROP_ASPECT = 165 / 220; // backyard.jpg width/height
@@ -162,10 +162,26 @@ export function buildScene() {
   const backdrop = new THREE.Mesh(new THREE.PlaneGeometry(60, 80), backdropMat);
   backdrop.position.set(0, 55, -30);
   contextGroup.add(backdrop); // part of context, so it hides with "Show bathroom context"
+  // Cover-fit the photo to the backdrop plane via texture repeat/offset: keeps
+  // the image undistorted by center-cropping the overflow (the portrait photo
+  // is taller than the landscape opening).
+  let backdropSize = [60, 80];
+  function applyBackdropCrop() {
+    const tex = backdropMat.map;
+    if (!tex) return;
+    const planeA = backdropSize[0] / backdropSize[1];
+    let rx = 1, ry = 1;
+    if (planeA >= BACKDROP_ASPECT) ry = BACKDROP_ASPECT / planeA; // crop top/bottom
+    else rx = planeA / BACKDROP_ASPECT;                          // crop sides
+    tex.repeat.set(rx, ry);
+    tex.offset.set((1 - rx) / 2, (1 - ry) / 2);
+    tex.needsUpdate = true;
+  }
   new THREE.TextureLoader().load('assets/backyard.jpg', (tex) => {
     tex.colorSpace = THREE.SRGBColorSpace;
     backdropMat.map = tex;
     backdropMat.needsUpdate = true;
+    applyBackdropCrop();
     applyBackdropBrightness(); // respect the current daylight level
   });
 
@@ -220,14 +236,18 @@ export function buildScene() {
     const bottom = cy - openH / 2;
     const sideW = SIDE_BORDER;
 
-    // Backdrop sits just behind the wall and is oversized (×1.2) so perspective
-    // never reveals its edges through the opening — clamped to the wall width so
-    // it can't peek past the wall. Portrait photo overflows vertically; raise the
-    // ceiling enough to keep that overflow hidden behind the wall.
-    const coverH = Math.max(openH, openW / BACKDROP_ASPECT);
-    const pw = Math.min(coverH * BACKDROP_ASPECT * 1.2, wallW);
-    const ph = pw / BACKDROP_ASPECT;
-    const ceiling = Math.max(CEILING_BASE, cy + ph / 2 + 4);
+    // Real ceiling height (no longer inflated to hide the backdrop — the
+    // backdrop is sized/cropped to stay within it instead).
+    const ceiling = CEILING_BASE;
+
+    // Backdrop fills the wall width and spans from just above the floor up to the
+    // ceiling, so its top is hidden behind the lintel above the window and never
+    // peeks above the wall. The photo is center-cropped (applyBackdropCrop) so
+    // this landscape plane doesn't distort the portrait image.
+    const pw = wallW;
+    const bdBottom = 12;          // hidden behind the wall below the window
+    const ph = ceiling - bdBottom;
+    const bdCy = (ceiling + bdBottom) / 2;
 
     // south wall, tiled in marble, built as 4 pieces leaving the recessed opening
     box(sideW, ceiling, D, -(openW / 2 + sideW / 2), ceiling / 2, 0, tileMaterial(sideW, ceiling));
@@ -248,7 +268,9 @@ export function buildScene() {
 
     backdrop.geometry.dispose();
     backdrop.geometry = new THREE.PlaneGeometry(pw, ph);
-    backdrop.position.set(0, cy, -12); // just behind the wall, to minimize the perspective gap
+    backdrop.position.set(0, bdCy, -12); // just behind the wall, to minimize the perspective gap
+    backdropSize = [pw, ph];
+    applyBackdropCrop();
 
     // window daylight: tile the opening with the zone lights, each facing
     // straight into the room so the whole window casts (not just the bottom)

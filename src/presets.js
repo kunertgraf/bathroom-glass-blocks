@@ -2,12 +2,16 @@
 // Arrangements dropdown (unlike localStorage saves, which are per-browser).
 // `colors` is colors[row][col], row 0 = bottom — same shape as serialize().
 //
-// All four presets share a 12x8 grid and the same Klimt-style gold ombré
-// motif — dense mosaic up top, dissolving to clear glass at the bottom — with
-// emerald and sand woven through as recurring accents. 'Golden Mosaic' is
-// kept at its original 10-wide composition (framed by a one-block clear-glass
-// buffer column on each side) as a reference; the newer arrangements span the
-// full 12-wide opening edge to edge.
+// Every preset is a Klimt-style gold mosaic massed toward the top left and
+// dissolving into clear glass toward the bottom right. They are mosaics, not
+// blocks of colour: clear glass is shot all the way through the dense heart, so
+// the gold reads as scattered tesserae rather than a painted panel. Amber holds
+// the core, sand is a scattered single-block accent, and emerald rides the
+// outer fringe where the mosaic breaks up (kept off the bottom rows). All sit
+// near Golden Mosaic's balance — about a third of the grid coloured, roughly
+// 60/20/20 amber/sand/emerald. 'Golden Mosaic' keeps its original 10-wide
+// composition (framed by a clear buffer column each side) as the reference; the
+// rest span the full 12 and each follows its own compositional logic.
 
 export const PRESET_ARRANGEMENTS = {
   'Golden Mosaic': {
@@ -27,58 +31,99 @@ export const PRESET_ARRANGEMENTS = {
       [null, '#e8a33d', '#e8a33d', '#cac18a', '#e8a33d', '#e8a33d', '#e8a33d', '#cac18a', '#e8a33d', '#e8a33d', null, null],
     ],
   },
-  'Amber Cascade': {
+  'Gold Rain': {
     v: 1,
     cols: 12,
     rows: 8,
     blockSize: 6,
     backlight: 0.9,
-    // Amber-forward ombré across the full width, sand secondary, green a rare accent.
+    // Broken vertical streaks of gilding running down the glass — long on the left,
+    // guttering out to the right, each streak interrupted by clear blocks.
     colors: [
       [null, null, null, null, null, null, null, null, null, null, null, null],
-      [null, null, null, null, null, null, '#e8a33d', null, null, null, null, null],
-      [null, null, null, null, null, null, null, '#cac18a', null, null, '#227735', null],
-      [null, null, '#227735', null, '#cac18a', '#cac18a', null, null, null, null, null, '#e8a33d'],
-      ['#227735', null, null, null, null, '#e8a33d', null, '#cac18a', null, null, null, '#cac18a'],
-      ['#e8a33d', null, '#e8a33d', '#cac18a', '#e8a33d', null, null, null, null, '#cac18a', null, '#e8a33d'],
-      ['#e8a33d', '#cac18a', '#cac18a', null, '#227735', '#227735', null, '#cac18a', null, '#cac18a', '#cac18a', null],
-      ['#cac18a', '#cac18a', '#227735', null, '#cac18a', '#227735', '#227735', '#cac18a', '#cac18a', '#e8a33d', '#e8a33d', '#e8a33d'],
+      [null, null, null, null, null, null, null, null, null, null, null, null],
+      ['#227735', null, '#e8a33d', null, '#227735', null, null, null, null, null, null, null],
+      ['#e8a33d', null, null, null, '#e8a33d', null, null, null, null, null, null, null],
+      ['#cac18a', null, null, '#e8a33d', '#e8a33d', null, '#227735', null, null, null, null, null],
+      ['#e8a33d', null, '#cac18a', null, '#e8a33d', '#e8a33d', '#cac18a', '#e8a33d', '#227735', null, null, null],
+      [null, '#e8a33d', '#e8a33d', null, null, '#e8a33d', null, null, '#cac18a', '#e8a33d', null, null],
+      ['#cac18a', '#e8a33d', '#e8a33d', '#e8a33d', '#e8a33d', '#cac18a', '#e8a33d', '#227735', '#e8a33d', '#e8a33d', '#227735', null],
     ],
   },
-  'Emerald Veil': {
+  'Tesserae Drift': {
     v: 1,
     cols: 12,
     rows: 8,
     blockSize: 6,
     backlight: 0.9,
-    // Green-forward canopy across the full width, amber/sand woven in beneath.
+    // Pointillist tesserae thrown from the top-left corner, thinning as they fly,
+    // with a few flecks landing far out in the clear.
     colors: [
       [null, null, null, null, null, null, null, null, null, null, null, null],
       [null, null, null, null, null, null, null, '#e8a33d', null, null, null, null],
-      [null, null, '#227735', null, '#cac18a', null, null, null, null, null, null, null],
-      [null, '#cac18a', null, null, null, '#227735', '#227735', '#cac18a', null, null, null, null],
-      ['#e8a33d', null, '#cac18a', null, null, null, null, null, '#227735', null, null, '#cac18a'],
-      ['#227735', '#227735', null, null, null, null, null, '#cac18a', '#227735', null, '#227735', '#227735'],
-      ['#227735', '#227735', '#227735', '#227735', null, null, '#227735', null, '#227735', '#227735', null, '#cac18a'],
-      ['#cac18a', '#cac18a', '#227735', '#227735', '#e8a33d', '#e8a33d', '#227735', null, '#227735', '#e8a33d', '#227735', '#227735'],
+      ['#227735', null, null, null, null, null, null, null, null, null, null, null],
+      ['#cac18a', '#e8a33d', '#cac18a', null, '#227735', null, null, null, null, null, null, '#227735'],
+      ['#e8a33d', null, '#e8a33d', '#e8a33d', '#e8a33d', null, null, null, '#e8a33d', '#227735', null, null],
+      ['#e8a33d', '#e8a33d', '#e8a33d', null, '#e8a33d', '#227735', null, null, null, '#cac18a', null, null],
+      ['#e8a33d', null, '#e8a33d', '#e8a33d', '#e8a33d', '#e8a33d', '#cac18a', null, null, null, null, null],
+      ['#e8a33d', '#cac18a', '#e8a33d', '#e8a33d', '#cac18a', '#e8a33d', null, '#227735', null, null, null, null],
     ],
   },
-  'Gilded Dusk': {
+  'Woven Gold': {
     v: 1,
     cols: 12,
     rows: 8,
     blockSize: 6,
     backlight: 0.9,
-    // Sand-forward dusk fade across the full width, amber secondary, green rare.
+    // A basket weave whose over/under bands leave regular clear windows, the
+    // shimmer loosening as it falls away from the corner.
     colors: [
       [null, null, null, null, null, null, null, null, null, null, null, null],
-      [null, '#cac18a', null, null, null, null, null, null, null, null, null, null],
-      [null, null, null, null, null, null, null, null, '#cac18a', '#cac18a', null, null],
-      [null, null, null, '#cac18a', '#cac18a', null, null, '#e8a33d', null, '#227735', null, null],
-      [null, null, null, null, null, '#cac18a', null, '#cac18a', null, '#227735', null, '#cac18a'],
-      [null, null, '#e8a33d', null, '#cac18a', null, null, null, '#cac18a', '#e8a33d', '#e8a33d', '#e8a33d'],
-      ['#cac18a', '#cac18a', '#227735', '#e8a33d', '#cac18a', null, null, '#e8a33d', '#e8a33d', null, null, '#cac18a'],
-      ['#e8a33d', '#cac18a', '#e8a33d', '#cac18a', '#e8a33d', '#cac18a', '#e8a33d', null, '#cac18a', '#cac18a', '#cac18a', '#cac18a'],
+      [null, null, null, null, null, null, null, null, null, null, null, null],
+      ['#cac18a', '#227735', null, null, null, null, null, null, null, null, null, null],
+      [null, '#e8a33d', '#e8a33d', '#227735', null, null, '#227735', null, null, null, null, null],
+      ['#e8a33d', '#cac18a', null, '#e8a33d', '#e8a33d', '#e8a33d', null, null, null, null, null, null],
+      ['#cac18a', null, '#cac18a', '#e8a33d', null, '#e8a33d', '#e8a33d', '#227735', null, null, null, null],
+      ['#e8a33d', '#e8a33d', '#e8a33d', null, '#e8a33d', '#cac18a', null, '#e8a33d', '#e8a33d', null, null, null],
+      ['#e8a33d', '#e8a33d', '#e8a33d', '#e8a33d', '#cac18a', null, '#227735', '#e8a33d', null, '#227735', null, null],
+    ],
+  },
+  'Amber Arc': {
+    v: 1,
+    cols: 12,
+    rows: 8,
+    blockSize: 6,
+    backlight: 0.9,
+    // A ribbon arcing out of the corner and sweeping down-right, hollow-cored —
+    // the glass rides the curve and leaves the inside of the bend clear.
+    colors: [
+      [null, null, null, '#e8a33d', null, null, null, null, null, null, null, null],
+      [null, null, null, null, null, null, null, null, null, null, null, null],
+      ['#e8a33d', '#227735', '#cac18a', null, '#227735', null, null, null, null, null, null, null],
+      ['#e8a33d', null, null, '#cac18a', '#e8a33d', null, null, null, null, null, null, null],
+      ['#e8a33d', '#e8a33d', '#227735', '#e8a33d', null, '#227735', null, null, null, null, null, null],
+      [null, '#cac18a', null, '#e8a33d', '#e8a33d', '#e8a33d', '#e8a33d', null, null, null, null, null],
+      ['#e8a33d', null, '#e8a33d', '#e8a33d', '#e8a33d', '#cac18a', null, '#227735', null, null, null, null],
+      ['#cac18a', '#e8a33d', '#e8a33d', '#cac18a', '#e8a33d', '#227735', '#e8a33d', '#e8a33d', null, null, null, null],
+    ],
+  },
+  'Ember Scatter': {
+    v: 1,
+    cols: 12,
+    rows: 8,
+    blockSize: 6,
+    backlight: 0.9,
+    // Constellations: small knots of two or three blocks separated by clear moats,
+    // the knots crowding toward the top-left.
+    colors: [
+      [null, null, null, null, null, null, null, null, null, null, null, null],
+      [null, null, null, null, null, null, null, null, null, null, null, null],
+      [null, '#e8a33d', null, '#227735', null, null, null, null, null, null, null, null],
+      ['#e8a33d', '#227735', '#cac18a', '#e8a33d', '#e8a33d', null, '#227735', null, null, null, null, null],
+      [null, '#e8a33d', null, '#e8a33d', null, '#cac18a', '#e8a33d', null, null, null, null, null],
+      ['#e8a33d', '#cac18a', '#e8a33d', '#e8a33d', '#227735', null, '#e8a33d', '#e8a33d', '#227735', null, null, null],
+      ['#e8a33d', null, '#e8a33d', '#e8a33d', '#e8a33d', '#cac18a', '#227735', '#cac18a', '#e8a33d', null, null, null],
+      ['#e8a33d', '#e8a33d', null, null, '#cac18a', null, null, null, '#e8a33d', null, null, null],
     ],
   },
 };

@@ -12,6 +12,7 @@ export function serialize(app) {
     backlight: app.grid.backlight,
     wallTile: app.wallTile,
     floorTile: app.floorTile,
+    tubTile: app.tubTile,
     colors: app.grid.getColors(),
   };
 }
@@ -22,6 +23,7 @@ export function applyState(app, s) {
   // `tile` is the legacy single-surface key; fall back to it for both.
   if (s.wallTile || s.tile) app.setWallTile(s.wallTile || s.tile);
   if (s.floorTile || s.tile) app.setFloorTile(s.floorTile || s.tile);
+  if (s.tubTile || s.tile) app.setTubTile(s.tubTile || s.tile);
   if (s.blockSize) app.grid.rebuild(s.cols, s.rows, s.blockSize, false);
   app.grid.setColors(s.colors);
 }

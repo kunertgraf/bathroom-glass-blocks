@@ -7,7 +7,10 @@ export const SILL_HEIGHT = 36;    // height of the bottom of the glass blocks ab
 export const WALL_MARGIN = 5;     // wall/frame margin around the block grid
 export const WALL_THICKNESS = 7;  // south wall depth; blocks are recessed/centered within it
 
-export const TUB = { width: 60, depth: 30, height: 22 };
+// The tub spans the alcove wall-to-wall, so its width is taken from the wall at
+// build time; the rest is the platform: 21" overall height with a 45° chamfer at
+// the front-left corner and a half-height step filling it. See tub.js.
+export const TUB = { depth: 64, height: 21, chamfer: 20, stepHeight: 10.5 };
 export const FLOOR_DEPTH = 72;    // room depth (6'-0")
 
 // blockSize is the *nominal* cell pitch (e.g. 6"), so N blocks span exactly

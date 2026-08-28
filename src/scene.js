@@ -1,11 +1,13 @@
 import * as THREE from 'three';
 import { RectAreaLightUniformsLib } from 'three/addons/lights/RectAreaLightUniformsLib.js';
+import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
 import { TUB, SILL_HEIGHT, WALL_THICKNESS } from './layout.js';
+import { createTub } from './tub.js';
 import { TILES, DEFAULT_TILE, getTile, makeProceduralTexture } from './tiles.js';
 
 const CEILING_BASE = 92;           // 7'-8" — the low (window-wall) ceiling height per the plan's elevations
-const SIDE_BORDER = 6;             // marble wall to each side of the window (≈ plan's 6' alcove around a 5' window)
-const SIDE_DEPTH = 60;             // how far the partial side walls return into the room
+const SIDE_BORDER = 0;             // none — the block grid runs edge to edge across the room
+const SIDE_DEPTH = 100;            // how far the partial side walls return into the room
 const BACKDROP_ASPECT = 165 / 220; // backyard.jpg width/height
 // The window daylight is split into a grid of small area lights tiling the
 // opening, so each patch can take on the color of the glass blocks in front of
@@ -28,12 +30,22 @@ function luma(r, g, b) { return 0.2126 * r + 0.7152 * g + 0.0722 * b; }
 // walls, tub, floor) plus lighting and the exterior backdrop. The wall is
 // rebuilt to match the grid via setOpening(). Context geometry lives in
 // `contextGroup` so it can be toggled on/off.
-export function buildScene() {
+export function buildScene(renderer) {
   const scene = new THREE.Scene();
   scene.background = new THREE.Color(0x3b3630); // soft warm grey (shows above the wall / at edges)
 
   const contextGroup = new THREE.Group();
   scene.add(contextGroup);
+
+  // A soft indoor environment, used *only* by the tub's acrylic. White acrylic
+  // reads as flat grey without something to reflect; scoping it to that one
+  // material keeps the glass block look untouched.
+  let acrylicEnv = null;
+  if (renderer) {
+    const pmrem = new THREE.PMREMGenerator(renderer);
+    acrylicEnv = pmrem.fromScene(new RoomEnvironment(), 0.04).texture;
+    pmrem.dispose();
+  }
 
   // --- Lighting ---
   // Low flat fill, so the window light below creates real gradients/contrast.
@@ -79,6 +91,7 @@ export function buildScene() {
   const tileTexCache = {};            // tile id -> base THREE.Texture
   let activeWallTile = getTile(DEFAULT_TILE);
   let activeFloorTile = getTile(DEFAULT_TILE);
+  let activeTubTile = getTile(DEFAULT_TILE);
 
   function baseTexture(tile) {
     if (tileTexCache[tile.id]) return tileTexCache[tile.id];
@@ -115,6 +128,25 @@ export function buildScene() {
   function setFloorTile(id) {
     activeFloorTile = getTile(id);
     if (lastArgs) setOpening(...lastArgs);
+  }
+  function setTubTile(id) {
+    activeTubTile = getTile(id);
+    if (lastArgs) setOpening(...lastArgs);
+  }
+
+  // Flat slabs (tub platform + step) are ShapeGeometry, whose UVs come out in
+  // inches rather than 0..1 — so the repeat is set from the tile's real size
+  // and the tile lands at true scale however the slab is shaped.
+  function slabMaterial(tile) {
+    const t = baseTexture(tile).clone();
+    t.repeat.set(1 / tile.inPerTile, 1 / tile.inPerTile);
+    t.needsUpdate = true;
+    return new THREE.MeshStandardMaterial({
+      map: t,
+      color: new THREE.Color(tile.tint || '#ffffff'),
+      roughness: tile.roughness ?? 0.5,
+      metalness: 0,
+    });
   }
 
   // Re-run the last wall build once a texture image finishes loading, so the
@@ -215,20 +247,26 @@ export function buildScene() {
   floor.rotation.x = -Math.PI / 2;
   contextGroup.add(floor);
 
-  // --- Tub (sits in front of the wall) ---
-  const tubZ = WALL_THICKNESS / 2 + TUB.depth / 2;
-  const tub = new THREE.Mesh(
-    new THREE.BoxGeometry(TUB.width, TUB.height, TUB.depth),
-    new THREE.MeshStandardMaterial({ color: 0xf3efe8, roughness: 0.35, metalness: 0 })
-  );
-  tub.position.set(0, TUB.height / 2, tubZ);
-  contextGroup.add(tub);
-  const basin = new THREE.Mesh(
-    new THREE.BoxGeometry(TUB.width - 6, 3, TUB.depth - 6),
-    new THREE.MeshStandardMaterial({ color: 0xe6ddcf, roughness: 0.5 })
-  );
-  basin.position.set(0, TUB.height - 1.5, tubZ);
-  contextGroup.add(basin);
+  // --- Tub: rebuilt by setOpening() so it always spans the alcove ---
+  const tubGroup = new THREE.Group();
+  contextGroup.add(tubGroup);
+  let tubBuilt = null;
+
+  function buildTub(alcoveWidth) {
+    if (tubBuilt) { tubGroup.remove(tubBuilt.group); tubBuilt.dispose(); }
+    tubBuilt = createTub({
+      width: alcoveWidth,
+      depth: TUB.depth,
+      height: TUB.height,
+      chamfer: TUB.chamfer,
+      stepHeight: TUB.stepHeight,
+      wallZ: WALL_THICKNESS / 2,
+      envMap: acrylicEnv,
+      deckMaterial: () => slabMaterial(activeTubTile),
+      panelMaterial: (w, h) => tileMaterial(w, h, false, activeTubTile),
+    });
+    tubGroup.add(tubBuilt.group);
+  }
 
   // --- Rebuildable walls ---
   const wallGroup = new THREE.Group();
@@ -269,31 +307,39 @@ export function buildScene() {
     // ceiling, so its top is hidden behind the lintel above the window and never
     // peeks above the wall. The photo is center-cropped (applyBackdropCrop) so
     // this landscape plane doesn't distort the portrait image.
-    const pw = wallW;
+    // Slightly wider than the opening: with the grid running edge to edge you can
+    // see past the backdrop's sides at an angle. Kept modest (and the plane sits
+    // close behind the wall) so it doesn't stick out when orbiting outside the room.
+    const pw = wallW + 24;
     const bdBottom = 12;          // hidden behind the wall below the window
     const ph = ceiling - bdBottom;
     const bdCy = (ceiling + bdBottom) / 2;
 
-    // south wall, tiled in marble, built as 4 pieces leaving the recessed opening
-    box(sideW, ceiling, D, -(openW / 2 + sideW / 2), ceiling / 2, 0, tileMaterial(sideW, ceiling));
-    box(sideW, ceiling, D, (openW / 2 + sideW / 2), ceiling / 2, 0, tileMaterial(sideW, ceiling));
+    // south wall, tiled in marble, built from the pieces around the recessed
+    // opening. The flanking pieces vanish when the grid runs edge to edge.
+    if (sideW > 0) {
+      box(sideW, ceiling, D, -(openW / 2 + sideW / 2), ceiling / 2, 0, tileMaterial(sideW, ceiling));
+      box(sideW, ceiling, D, (openW / 2 + sideW / 2), ceiling / 2, 0, tileMaterial(sideW, ceiling));
+    }
     box(openW, ceiling - top, D, 0, (ceiling + top) / 2, 0, tileMaterial(openW, ceiling - top));
     if (bottom > 0) box(openW, bottom, D, 0, bottom / 2, 0, tileMaterial(openW, bottom));
 
     // partial side (return) walls, also tiled in marble, showing the room depth
-    const sideGeo = new THREE.PlaneGeometry(SIDE_DEPTH, ceiling);
-    const leftWall = new THREE.Mesh(sideGeo, tileMaterial(SIDE_DEPTH, ceiling, true));
-    leftWall.position.set(-wallW / 2, ceiling / 2, SIDE_DEPTH / 2);
+    const sideLen = SIDE_DEPTH + WALL_THICKNESS / 2;      // back to the wall's rear face
+    const sideCz = SIDE_DEPTH / 2 - WALL_THICKNESS / 4;   // centre of that span
+    const sideGeo = new THREE.PlaneGeometry(sideLen, ceiling);
+    const leftWall = new THREE.Mesh(sideGeo, tileMaterial(sideLen, ceiling, true));
+    leftWall.position.set(-wallW / 2, ceiling / 2, sideCz);
     leftWall.rotation.y = Math.PI / 2;
     wallGroup.add(leftWall);
-    const rightWall = new THREE.Mesh(sideGeo, tileMaterial(SIDE_DEPTH, ceiling, true));
-    rightWall.position.set(wallW / 2, ceiling / 2, SIDE_DEPTH / 2);
+    const rightWall = new THREE.Mesh(sideGeo, tileMaterial(sideLen, ceiling, true));
+    rightWall.position.set(wallW / 2, ceiling / 2, sideCz);
     rightWall.rotation.y = -Math.PI / 2;
     wallGroup.add(rightWall);
 
     backdrop.geometry.dispose();
     backdrop.geometry = new THREE.PlaneGeometry(pw, ph);
-    backdrop.position.set(0, bdCy, -12); // just behind the wall, to minimize the perspective gap
+    backdrop.position.set(0, bdCy, -7); // close behind the wall: less parallax, so less overhang is needed
     backdropSize = [pw, ph];
     applyBackdropCrop();
 
@@ -317,9 +363,11 @@ export function buildScene() {
     if (floor.material.map) floor.material.map.dispose();
     floor.material.dispose();
     floor.material = tileMaterial(wallW, SIDE_DEPTH, false, activeFloorTile, activeFloorTile.floorScale ?? 1);
+
+    buildTub(wallW); // the tub spans the alcove, so it tracks the wall width
   }
 
-  return { scene, contextGroup, setOpening, setDaylight, setWindowColors, setWallTile, setFloorTile, tiles: TILES };
+  return { scene, contextGroup, setOpening, setDaylight, setWindowColors, setWallTile, setFloorTile, setTubTile, tiles: TILES };
 }
 
 export { SILL_HEIGHT };

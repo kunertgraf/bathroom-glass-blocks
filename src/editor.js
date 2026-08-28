@@ -73,7 +73,7 @@ export function initEditor(app) {
     }
   });
 
-  // --- Tile (walls + floor independently) ---
+  // --- Tile (walls, floor and tub surround independently) ---
   function fillTileSelect(sel, value) {
     sel.innerHTML = '';
     for (const t of app.tiles) {
@@ -87,9 +87,11 @@ export function initEditor(app) {
   function renderTileOptions() {
     fillTileSelect($('wallTile'), app.wallTile);
     fillTileSelect($('floorTile'), app.floorTile);
+    fillTileSelect($('tubTile'), app.tubTile);
   }
   $('wallTile').addEventListener('change', (e) => app.setWallTile(e.target.value));
   $('floorTile').addEventListener('change', (e) => app.setFloorTile(e.target.value));
+  $('tubTile').addEventListener('change', (e) => app.setTubTile(e.target.value));
 
   // --- Lighting ---
   $('backlight').addEventListener('input', (e) => {

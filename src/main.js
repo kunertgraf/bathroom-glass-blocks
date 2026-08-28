@@ -11,7 +11,7 @@ const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, preserveDraw
 renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
 renderer.outputColorSpace = THREE.SRGBColorSpace;
 
-const { scene, contextGroup, setOpening, setDaylight, setWindowColors, setWallTile, setFloorTile, tiles } = buildScene();
+const { scene, contextGroup, setOpening, setDaylight, setWindowColors, setWallTile, setFloorTile, setTubTile, tiles } = buildScene(renderer);
 
 const grid = createBlockGrid();
 scene.add(grid.group);
@@ -28,10 +28,12 @@ const app = {
   tiles,
   wallTile: 'marble-white',
   floorTile: 'marble-white',
+  tubTile: 'marble-white',
   // Backlight slider drives both the glass glow and the window daylight.
   setBacklight(v) { grid.setBacklight(v); setDaylight(v); },
   setWallTile(id) { this.wallTile = id; setWallTile(id); },
   setFloorTile(id) { this.floorTile = id; setFloorTile(id); },
+  setTubTile(id) { this.tubTile = id; setTubTile(id); },
   setContextVisible(v) { contextGroup.visible = v; },
   updateOpening() {
     const { width, height } = gridSize(grid.cols, grid.rows, grid.blockSize);

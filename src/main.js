@@ -15,7 +15,7 @@ const { scene, contextGroup, setOpening, setDaylight, setWindowColors, setWallTi
 
 const grid = createBlockGrid();
 scene.add(grid.group);
-grid.rebuild(10, 8, 6); // 5' wide x 4' tall, per the plan
+grid.rebuild(12, 8, 6); // 6' wide x 4' tall (widened from the 5' plan width)
 
 const camera = new THREE.PerspectiveCamera(45, 1, 0.1, 4000);
 const controls = new OrbitControls(camera, renderer.domElement);

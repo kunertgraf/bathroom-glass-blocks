@@ -16,6 +16,10 @@ export const TILES = [
   { id: 'zellige-sand', name: 'Sand Zellige',         kind: 'zellige', base: '#d8c39a', grout: '#cabfa6', grid: 6, inPerTile: 24, roughness: 0.28, floorScale: 1.8 },
   { id: 'terrazzo',     name: 'Warm Terrazzo',        kind: 'terrazzo', base: '#ece3d0', chips: ['#e8a33d', '#227735', '#b8a67e', '#8a6f4a', '#ffffff'], inPerTile: 34, roughness: 0.4 },
   { id: 'zellige-sage', name: 'Sage Zellige',         kind: 'zellige', base: '#aab394', grout: '#b3b39c', grid: 6, inPerTile: 24, roughness: 0.28, floorScale: 1.8 },
+  // Real product photo (Pastorelli Colorful, "cf light", 80x80cm rett. = 31.5"x31.5"
+  // square tile) — inPerTile is set to the tile's real-world size so it repeats
+  // at true scale on the wall/floor.
+  { id: 'terrazzo-pastorelli', name: 'Pastorelli Light Terrazzo', kind: 'image', src: 'assets/b_pastorelli-colorful-p010515_colorful_cf_light_80x80_rett.webp', tint: '#ffffff', inPerTile: 31.5, roughness: 0.3 },
 ];
 
 export const DEFAULT_TILE = 'marble-white';

@@ -11,7 +11,7 @@ export const TUB = { width: 60, depth: 30, height: 22 };
 export const FLOOR_DEPTH = 72;    // room depth (6'-0")
 
 // blockSize is the *nominal* cell pitch (e.g. 6"), so N blocks span exactly
-// N * blockSize (10 x 6" = 5'-0"). The mortar gap is carved out of the cell,
+// N * blockSize (12 x 6" = 6'-0"). The mortar gap is carved out of the cell,
 // not added on top, so the overall opening matches the plan dimensions.
 export function gridSize(cols, rows, blockSize) {
   const pitch = blockSize;

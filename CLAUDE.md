@@ -30,8 +30,8 @@ Requires internet access (Three.js loads from jsDelivr).
 ## Notes
 - Real glass colors (golden yellow, pale chartreuse, emerald) and the wavy block
   texture come from `assets/PXL_*.jpg`. All blocks are 6"×6".
-- Opening is a fixed 5'×4' (10×8 blocks), per the plan (set in `main.js`; no UI
-  size controls). Blocks are recessed (centered) within a 7" wall
+- Opening is a fixed 6'×4' (12×8 blocks; widened from the plan's 5'×4'/10×8),
+  set in `main.js`; no UI size controls. Blocks are recessed (centered) within a 7" wall
   (`WALL_THICKNESS`). Each block has its own mortar frame: gray for clear,
   orange for colored (`MORTAR_*` in `blocks.js`).
 - Ceiling height is 7'-8" (`CEILING_BASE = 92`), the low/window-wall height from

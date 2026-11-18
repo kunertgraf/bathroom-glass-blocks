@@ -23,6 +23,12 @@
 // The three newest are grown from a process rather than drawn to a rule, which
 // is what keeps them organic: noise-driven dapple, advected embers, and
 // diffusion-limited aggregation.
+//
+// The bottom-weighted set ('Tesserae Settle', 'Tesserae Rising', 'Twin Drift',
+// 'Steam') flips the composition for privacy: colour is massed in the bottom
+// three rows (the 18" above the tub) and thins upward into a few flecks. Each uses
+// exactly the glass on hand — 21 amber, 7 sand, 6 emerald — and passes all four
+// rules (checked as runs in rows, columns and both diagonals).
 
 export const PRESET_ARRANGEMENTS = {
   'Golden Mosaic': {
@@ -135,6 +141,82 @@ export const PRESET_ARRANGEMENTS = {
       ['#e8a33d', null, '#cac18a', null, '#227735', null, '#e8a33d', '#e8a33d', '#227735', null, null, null],
       ['#cac18a', null, '#e8a33d', '#e8a33d', null, '#e8a33d', null, null, '#cac18a', null, null, null],
       ['#e8a33d', '#cac18a', '#e8a33d', null, null, null, '#227735', null, null, null, null, null],
+    ],
+  },
+  'Tesserae Settle': {
+    v: 1,
+    cols: 12,
+    rows: 8,
+    blockSize: 6,
+    backlight: 0.9,
+    // Tesserae Drift turned over: the same throw, now landing along the
+    // bottom left and thinning up and right, so the tub side is screened.
+    colors: [
+      ['#e8a33d', '#cac18a', '#e8a33d', '#e8a33d', '#cac18a', '#e8a33d', null, '#227735', null, '#e8a33d', null, null],
+      ['#cac18a', null, '#cac18a', null, null, '#e8a33d', '#e8a33d', null, null, null, '#cac18a', null],
+      ['#e8a33d', '#e8a33d', '#e8a33d', null, '#cac18a', '#227735', null, null, null, '#cac18a', null, null],
+      ['#e8a33d', null, '#e8a33d', '#e8a33d', '#e8a33d', null, null, null, '#e8a33d', '#227735', null, null],
+      ['#e8a33d', '#e8a33d', '#e8a33d', null, '#227735', null, '#e8a33d', null, null, null, null, '#227735'],
+      ['#227735', null, null, null, null, null, null, null, '#e8a33d', null, null, null],
+      [null, null, null, null, null, null, null, '#e8a33d', null, null, null, null],
+      [null, null, null, null, null, null, null, null, null, null, null, null],
+    ],
+  },
+  'Tesserae Rising': {
+    v: 1,
+    cols: 12,
+    rows: 8,
+    blockSize: 6,
+    backlight: 0.9,
+    // Tesserae settled across the full width of the bottom 18", thinning
+    // upward into a few flecks — the most even privacy band of the set.
+    colors: [
+      ['#e8a33d', null, '#cac18a', '#e8a33d', '#e8a33d', '#227735', null, '#e8a33d', '#e8a33d', '#cac18a', null, '#e8a33d'],
+      ['#227735', '#e8a33d', '#e8a33d', null, '#cac18a', null, '#e8a33d', '#e8a33d', null, '#e8a33d', '#cac18a', null],
+      ['#e8a33d', null, '#cac18a', '#e8a33d', null, '#e8a33d', null, null, '#e8a33d', '#227735', null, '#e8a33d'],
+      [null, null, '#e8a33d', null, '#227735', null, null, '#e8a33d', null, null, '#e8a33d', null],
+      [null, '#e8a33d', null, null, null, null, '#227735', null, null, '#cac18a', null, null],
+      [null, null, '#cac18a', null, null, null, null, null, null, null, null, '#227735'],
+      [null, null, null, null, null, null, null, null, null, '#e8a33d', null, null],
+      [null, null, null, null, null, null, null, null, null, null, null, null],
+    ],
+  },
+  'Twin Drift': {
+    v: 1,
+    cols: 12,
+    rows: 8,
+    blockSize: 6,
+    backlight: 0.9,
+    // Two drifts banked into the bottom corners, meeting low in the middle and
+    // leaving the upper centre open to the sky.
+    colors: [
+      [null, '#e8a33d', '#e8a33d', '#e8a33d', null, '#227735', '#e8a33d', '#e8a33d', null, '#e8a33d', null, '#e8a33d'],
+      ['#e8a33d', '#227735', null, '#cac18a', '#e8a33d', null, null, '#e8a33d', '#cac18a', '#e8a33d', '#e8a33d', null],
+      ['#cac18a', null, '#e8a33d', null, '#e8a33d', '#e8a33d', '#227735', null, null, null, '#cac18a', '#227735'],
+      [null, '#e8a33d', '#cac18a', null, null, '#e8a33d', null, null, null, '#e8a33d', null, '#e8a33d'],
+      ['#e8a33d', null, null, '#227735', null, null, null, null, null, null, null, '#cac18a'],
+      [null, '#cac18a', null, null, null, null, null, null, null, null, '#227735', null],
+      [null, null, null, null, null, null, null, null, null, null, null, '#e8a33d'],
+      [null, null, null, null, null, null, null, null, null, null, null, null],
+    ],
+  },
+  'Steam': {
+    v: 1,
+    cols: 12,
+    rows: 8,
+    blockSize: 6,
+    backlight: 0.9,
+    // A dense full-width base with a loose plume of tesserae lifting off it,
+    // like steam rising from the tub, drifting right as it goes.
+    colors: [
+      ['#e8a33d', '#cac18a', '#e8a33d', '#e8a33d', null, '#227735', '#e8a33d', null, '#e8a33d', '#cac18a', '#e8a33d', '#e8a33d'],
+      [null, '#e8a33d', null, '#227735', '#e8a33d', null, '#cac18a', '#e8a33d', null, '#e8a33d', null, '#e8a33d'],
+      ['#e8a33d', '#cac18a', null, '#e8a33d', null, '#cac18a', '#e8a33d', null, '#e8a33d', null, '#227735', null],
+      [null, null, '#e8a33d', null, null, null, '#e8a33d', '#227735', null, null, null, '#e8a33d'],
+      [null, null, null, null, null, '#e8a33d', null, null, '#cac18a', null, null, null],
+      [null, null, null, null, null, null, '#227735', null, null, null, '#227735', null],
+      [null, null, null, null, null, null, null, null, '#e8a33d', null, null, null],
+      [null, null, null, null, null, null, null, '#cac18a', null, null, null, null],
     ],
   },
 };
